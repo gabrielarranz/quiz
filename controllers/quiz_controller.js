@@ -13,8 +13,20 @@ exports.load = function(req, res, next, quizId) {
 };
 
 // GET /quizes
+// GET /quizes?search=patron
 exports.index = function(req, res) {
-  models.Quiz.findAll().then(
+  var consulta;
+  // en función de la existencia del parámetro preparamos query
+  if (req.query.search) {
+    query = {
+      where: ["pregunta like ?", '%' + req.query.search + '%'],
+      order: ["pregunta"]
+    };
+  }
+  else {
+    query = {} ;
+  }
+  models.Quiz.findAll(consulta).then(
     function(quizes) {
       res.render('quizes/index', { quizes: quizes});
     }
