@@ -14,23 +14,24 @@ exports.load = function(req, res, next, quizId) {
 
 // GET /quizes
 // GET /quizes?search=patron
-exports.index = function(req, res) {
-  var consulta;
-  // en función de la existencia del parámetro preparamos query
-  if (req.query.search) {
-    query = {
-      where: ["pregunta like ?", '%' + req.query.search + '%'],
-      order: ["pregunta"]
-    };
-  }
-  else {
-    query = {} ;
-  }
-  models.Quiz.findAll(consulta).then(
-    function(quizes) {
-      res.render('quizes/index', { quizes: quizes, errors: []});
+exports.index = function(req, res){
+	if(req.query.search) { // texto seleccionado
+    var filtro = (req.query.search || '').replace(" ", "%");
+    models.Quiz.findAll({where:["pregunta like ?", '%'+filtro+'%'],order:'pregunta ASC'}).then(function(quizes){
+    res.render('quizes/index', {quizes: quizes, errors: []});
+    }).catch(function(error) { next(error);});
+	}else {     // tematica seleccionada
+    if(req.query.tema) {
+      var filtro = (req.query.tema || '');
+      models.Quiz.findAll({where:["tematica like ?", '%'+filtro+'%'],order:'tematica ASC'}).then(function(quizes){
+        res.render('quizes/index', {quizes: quizes, errors: []});
+      }).catch(function(error) { next(error);});
+	  } else {    // nada seleccionado
+      models.Quiz.findAll().then(function(quizes){
+        res.render('quizes/index', {quizes: quizes, errors: []});
+      }).catch(function(error) { next(error);});
     }
-  ).catch(function(error) { next(error);})
+  }
 };
 
 // GET /quizes/:id
@@ -56,7 +57,7 @@ exports.author = function(req, res) {
 // GET /quizes/new
 exports.new = function(req, res) {
   var quiz = models.Quiz.build(
-    {pregunta: "Pregunta", respuesta: "Respuesta"}
+    {pregunta: "Pregunta", respuesta: "Respuesta", tematica:  "Tematica"}
   );
 
   res.render('quizes/new', {quiz: quiz, errors: []});
@@ -74,7 +75,7 @@ exports.create = function(req, res) {
         res.render('quizes/new', {quiz: quiz, errors: err.errors});
       } else {
         quiz // save: guarda en DB campos pregunta y respuesta de quiz
-        .save({fields: ["pregunta", "respuesta"]})
+        .save({fields: ["pregunta", "respuesta", "tematica"]})
         .then( function(){ res.redirect('/quizes')})
       }      // res.redirect: Redirección HTTP a lista de preguntas
     }
@@ -92,6 +93,7 @@ exports.edit = function(req, res) {
 exports.update = function(req, res) {
   req.quiz.pregunta  = req.body.quiz.pregunta;
   req.quiz.respuesta = req.body.quiz.respuesta;
+  req.quiz.tematica = req.body.quiz.tematica;
 
   req.quiz
   .validate()
@@ -101,7 +103,7 @@ exports.update = function(req, res) {
         res.render('quizes/edit', {quiz: req.quiz, errors: err.errors});
       } else {
         req.quiz     // save: guarda campos pregunta y respuesta en DB
-        .save( {fields: ["pregunta", "respuesta"]})
+        .save( {fields: ["pregunta", "respuesta", "tematica"]})
         .then( function(){ res.redirect('/quizes');});
       }     // Redirección HTTP a lista de preguntas (URL relativo)
     }

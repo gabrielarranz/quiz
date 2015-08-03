@@ -1,10 +1,21 @@
 <form method="get" action="/quizes">
+  <p class="tematica"> Temática
+  <select name="tema" >
+    <option value="" selected>Todas</option>
+    <option value="humanidades">Humanidades</option>
+    <option value="ocio">Ocio</option>
+    <option value="ciencia">Ciencia</option>
+    <option value="tecnologia">Tecnologia</option>
+    <option value="geografia">Geografia</option>
+  </select>
+  </p>
   <input type="text" name="search" value="Pregunta a buscar"/>
   <input type="submit" value="Buscar">
 </form>
 <table>
   <% var i; for (i=0; i < quizes.length; i++) { %>
     <tr>
+      <td><%= quizes[i].tematica %></td>
       <td><a href="quizes/<%= quizes[i].id %>"><%= quizes[i].pregunta %></a></td>
       <td><a href="quizes/<%= quizes[i].id %>/edit"><button>editar</button></a></td>
       <td>
